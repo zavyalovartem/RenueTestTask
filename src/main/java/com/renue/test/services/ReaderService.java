@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.TreeMap;
+import java.util.Comparator;
 
 @Service
 @EnableConfigurationProperties
@@ -26,29 +26,22 @@ public class ReaderService {
 
     public void readAll(java.io.Reader reader, String searchString) throws IOException, CsvException {
         CSVReader csvReader = new CSVReader(reader);
-        var sortingMap = new TreeMap<String, ArrayList<String[]>>();
+        var result = new ArrayList<String[]>();
         String[] row;
         long startTime = System.nanoTime();
         while ((row = csvReader.readNext()) != null){
-            var sortColumn = row[searchColumn - 1];
-            if (sortColumn.startsWith(searchString)) {
-                if (sortingMap.containsKey(sortColumn)){
-                    sortingMap.get(sortColumn).add(row);
-                } else{
-                    var list =  new ArrayList<String[]>();
-                    list.add(row);
-                    sortingMap.put(sortColumn, list);
-                }
+            var col = row[searchColumn - 1];
+            if (col.startsWith(searchString)) {
+                result.add(row);
             }
         }
+        result.stream().sorted(Comparator.comparing(o -> o[searchColumn - 1]));
         long endTime = System.nanoTime();
         reader.close();
         csvReader.close();
-        var amount = sortingMap.size();
-        for (var entry : sortingMap.entrySet()){
-            for (var val : entry.getValue()) {
-                System.out.println(String.join(" ", val));
-            }
+        var amount = result.size();
+        for (var resRow : result){
+            System.out.println(String.join(" ", resRow));
         }
         var resTime = (endTime - startTime) / 1000000;
         System.out.println("Количество найденных строк: " + amount);
@@ -63,6 +56,9 @@ public class ReaderService {
         System.out.println("Введите строку:");
         var str = consoleReader.readLine();
         consoleReader.close();
+        if (str == null){
+            throw new IllegalArgumentException("Введённая строка не может иметь значение null");
+        }
         if (externalSearchColumn != null){
             searchColumn = externalSearchColumn;
         }

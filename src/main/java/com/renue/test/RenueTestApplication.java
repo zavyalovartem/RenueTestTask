@@ -26,6 +26,9 @@ public class RenueTestApplication implements CommandLineRunner {
 		Integer searchColumn = null;
 		if (args.length != 0){
 			searchColumn = Integer.parseInt(args[0]);
+			if (searchColumn < 1 || searchColumn > 14){
+				throw new IllegalArgumentException("Некорректный номер колонки, номер не может быть " + searchColumn);
+			}
 		}
 		parser.externalSearchColumn = searchColumn;
 		parser.testReturn();
